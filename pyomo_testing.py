@@ -65,8 +65,6 @@ model.pie_box=Var(model.pie_idx, model.box_idx, within=NonNegativeIntegers)
 
 model.box = Var(model.box_idx, within=NonNegativeIntegers)
 
-i = model.create_instance(data)
-i.pprint()
 
 
 # Constraint: the total pie bought across multiple boxes is less
@@ -94,4 +92,12 @@ def pieboxCoverage_rule(model, i,j):
     return sum(model.pie_box[i,j] for i in model.pie_idx)>=4*model.box[j]
 model.pieboxCoverage = Constraint(rule=pieboxCoverage_rule)
 
+
+instance = model.create_instance()
+
+instance.pprint()
+
+
+opt = pyo.SolverFactory('glpk')
+opt.solve(instance)
 
