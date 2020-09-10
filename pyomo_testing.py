@@ -80,6 +80,7 @@ def pieboxmax_rule(model, i,j):
     return model.pie_box[i,j] <= model.box_range[j,"max"]*model.flags[i,j]
 model.pieboxmax = Constraint( rule=pieboxmax_rule )
 
+# Constraint: specifying the range of the number of box types
 def boxmax_rule(model,i):
     return model.box[i] <= model.box_range[i,"max"]
 model.boxmax = Constraint( rule=boxmax_rule )
@@ -88,5 +89,9 @@ def boxmin_rule(model,i):
     return model.box[i] >= model.box_range[i,"min"]
 model.boxmin = Constraint( rule=boxmin_rule )
 
+# Constrain: Linking the number of pies to each box category to the number of boxes
+def pieboxCoverage_rule(model, i,j):
+    return sum(model.pie_box[i,j] for i in model.pie_idx)>=4*model.box[j]
+model.pieboxCoverage = Constraint(rule=pieboxCoverage_rule)
 
 
