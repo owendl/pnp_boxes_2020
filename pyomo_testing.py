@@ -75,16 +75,18 @@ def piemax_rule(model, i,j):
     return sum(model.pie_box[i,j] for j in model.box_idx) <= model.max[i]
 model.piemax = Constraint( rule=piemax_rule )
 
-# Constraint: number of pies to a box is less than or equal to the number of boxes or zero if the pie is not allowed for that box
+# Constraint: number of pies to a box caegory is less than or equal to the number of boxes or zero if the pie is not allowed for that box
 def pieboxmax_rule(model, i,j):
     return model.pie_box[i,j] <= model.box_range[j,"max"]*model.flags[i,j]
 model.pieboxmax = Constraint( rule=pieboxmax_rule )
 
-def boxmax_rule(model):
+def boxmax_rule(model,i):
     return model.box[i] <= model.box_range[i,"max"]
 model.boxmax = Constraint( rule=boxmax_rule )
 
-def boxmin_rule(model):
+def boxmin_rule(model,i):
     return model.box[i] >= model.box_range[i,"min"]
 model.boxmin = Constraint( rule=boxmin_rule )
+
+
 
