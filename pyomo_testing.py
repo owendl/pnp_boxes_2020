@@ -92,6 +92,10 @@ def pieboxCoverage_rule(model, i,j):
     return sum(model.pie_box[i,j] for i in model.pie_idx)>=4*model.box[j]
 model.pieboxCoverage = Constraint(rule=pieboxCoverage_rule)
 
+# Objective function: minimize cost of the pie * number of pies for each box
+def obj_rule(model):
+    return sum(model.cost[i]*model.pie_box[i,j] for i in model.pie_idx for j in model.box_idx) 
+model.obj = Objective(rule=obj_rule, sense=minimize)
 
 instance = model.create_instance()
 
