@@ -71,11 +71,13 @@ i.pprint()
 
 # Constraint: the total pie bought across multiple boxes is less
 # than the specified max of the pie
-# def piemax_rule(model, i,j):
-    # return sum(model.pie_box[i,j] for j in model.box_idx) <= model.max[i]
-# model.piemax = Constraint( rule=piemax_rule )
+def piemax_rule(model, i,j):
+    return sum(model.pie_box[i,j] for j in model.box_idx) <= model.max[i]
+model.piemax = Constraint( rule=piemax_rule )
 
 # Constraint: number of pies to a box is less than or equal to the number of boxes or zero if the pie is not allowed for that box
-# def pieboxmax_rule(model, i,j):
-    # return model.pie_box[i,j] <= model.max[i]
-# model.pieboxmax = Constraint( rule=pieboxmax_rule )
+def pieboxmax_rule(model, i,j):
+    return model.pie_box[i,j] <= model.box_range[j,"max"]*model.flags[i,j]
+model.pieboxmax = Constraint( rule=pieboxmax_rule )
+
+
