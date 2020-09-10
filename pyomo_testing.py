@@ -80,4 +80,11 @@ def pieboxmax_rule(model, i,j):
     return model.pie_box[i,j] <= model.box_range[j,"max"]*model.flags[i,j]
 model.pieboxmax = Constraint( rule=pieboxmax_rule )
 
+def boxmax_rule(model):
+    return model.box[i] <= model.box_range[i,"max"]
+model.boxmax = Constraint( rule=boxmax_rule )
+
+def boxmin_rule(model):
+    return model.box[i] >= model.box_range[i,"min"]
+model.boxmin = Constraint( rule=boxmin_rule )
 
