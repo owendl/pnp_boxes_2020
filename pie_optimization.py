@@ -38,14 +38,14 @@ boxes = ["Regular","Vegan","GlutenFree"]
 
 sweet_savory = ["Sweet","Savory"]
 
-bakers_pies=df[["Key","Bakery"]].groupby('Bakery')['Key'].apply(list)
-
-bakers_pies=bakers_pies.to_dict()
+bakers_pies=df[["Key","Bakery"]].groupby('Bakery')['Key'].apply(list).to_dict()
 
 bakers=df["Bakery"].drop_duplicates().tolist()
 
 bakers_mins=df[["Priority","Bakery"]].groupby("Bakery").max().to_dict()["Priority"]
 
+
+baker_pie_max = df[["Bakery", "Max_pie_baker"]].drop_duplicates().groupby("Bakery").first().to_dict()["Max_pie_baker"]
 
 data={None:
       {
@@ -61,7 +61,8 @@ data={None:
        , "box_range":box_ranges_dict
        ,"priority":priority_dict
        ,"bakers_pies":bakers_pies
-        , "baker_mins": bakers_mins
+       ,"baker_mins": bakers_mins
+       ,"baker_pie_max": baker_pie_max
        }
       }
 
@@ -89,6 +90,8 @@ model.swsa = Param(model.pie_idx, model.swsa_idx, within=Binary)
 model.box_range = Param(model.box_idx, model.maxmin_idx, within=NonNegativeIntegers)
 model.baker_mins=Param(model.bakers_idx, within=PositiveIntegers)
 model.bakers_pies=Param(model.bakers_idx, within=Any)
+
+model.baker_pie_max = Param(model.bakers_idx, within=Any)
 
 
 
@@ -129,65 +132,73 @@ model.boxsavory = Constraint(model.box_idx, rule=boxsavory_rule)
 
 ## Baker specific maximums
 
-# Constrain baker total max
-def totalPie01_rule(model):
-    return sum(model.pie_box[i,j] for i in [0,1] for j in model.box_idx)<= model.max[0]
-model.totalPie01 = Constraint(rule=totalPie01_rule )
+def bakermaxs_rule(model, b,i):
+    pies = model.bakers_pies[b]
+    if model.baker_pie_max[b] == "Pie":
+        return sum(model.pie_box[i,j] for j in model.box_idx)<= model.max[i]
+    elif model.baker_pie_max[b]=="Baker":
+        return sum(model.pie_box[p,j] for p in pies for j in model.box_idx)<= mean(model.max[p] for p in pies)
+model.bakermaxs = Constraint(model.bakers_idx, model.pie_idx, rule=bakermaxs_rule)
+
+# # Constrain baker total max
+# def totalPie01_rule(model):
+#     return sum(model.pie_box[i,j] for i in [0,1] for j in model.box_idx)<= model.max[0]
+# model.totalPie01 = Constraint(rule=totalPie01_rule )
+
+# # #Constrain baker total max
+# def totalPie2345_rule(model):
+#     return sum(model.pie_box[i,j] for i in [2,3,4,5] for j in model.box_idx)<= model.max[2]
+# model.totalPie2345 = Constraint(rule=totalPie2345_rule )
+
+# # #Constrain baker total max
+# def totalPie789_rule(model):
+#     return sum(model.pie_box[i,j] for i in [7,8,9] for j in model.box_idx)<= model.max[7]
+# model.totalPie789 = Constraint(rule=totalPie789_rule )
 
 # #Constrain baker total max
-def totalPie2345_rule(model):
-    return sum(model.pie_box[i,j] for i in [2,3,4,5] for j in model.box_idx)<= model.max[2]
-model.totalPie2345 = Constraint(rule=totalPie2345_rule )
+# def totalPie141516_rule(model):
+#     return sum(model.pie_box[i,j] for i in [15,16,14] for j in model.box_idx)<= model.max[15]
+# model.totalPie141516 = Constraint(rule=totalPie141516_rule )
 
-# #Constrain baker total max
-def totalPie789_rule(model):
-    return sum(model.pie_box[i,j] for i in [7,8,9] for j in model.box_idx)<= model.max[7]
-model.totalPie789 = Constraint(rule=totalPie789_rule )
+# # #Constrain baker total max
+# def totalPie1718_rule(model):
+#     return sum(model.pie_box[i,j] for i in [18,17] for j in model.box_idx)<= model.max[18]
+# model.totalPie1718 = Constraint(rule=totalPie1718_rule )
 
-#Constrain baker total max
-def totalPie141516_rule(model):
-    return sum(model.pie_box[i,j] for i in [15,16,14] for j in model.box_idx)<= model.max[15]
-model.totalPie141516 = Constraint(rule=totalPie141516_rule )
+# # #Constrain baker total max
+# def totalPie1920_rule(model):
+#     return sum(model.pie_box[i,j] for i in [19,20] for j in model.box_idx)<= model.max[20]
+# model.totalPie1920 = Constraint(rule=totalPie1920_rule )
 
-# #Constrain baker total max
-def totalPie1718_rule(model):
-    return sum(model.pie_box[i,j] for i in [18,17] for j in model.box_idx)<= model.max[18]
-model.totalPie1718 = Constraint(rule=totalPie1718_rule )
+# # #Constrain baker total max
+# def totalPie212223_rule(model):
+#     return sum(model.pie_box[i,j] for i in [22,23,21] for j in model.box_idx)<= model.max[22]
+# model.totalPie212223 = Constraint(rule=totalPie212223_rule )
 
-# #Constrain baker total max
-def totalPie1920_rule(model):
-    return sum(model.pie_box[i,j] for i in [19,20] for j in model.box_idx)<= model.max[20]
-model.totalPie1920 = Constraint(rule=totalPie1920_rule )
+# # #Constrain baker total max
+# def totalPie2526_rule(model):
+#     return sum(model.pie_box[i,j] for i in [25,26,27] for j in model.box_idx)<= model.max[26]
+# model.totalPie2526 = Constraint(rule=totalPie2526_rule )
 
-# #Constrain baker total max
-def totalPie212223_rule(model):
-    return sum(model.pie_box[i,j] for i in [22,23,21] for j in model.box_idx)<= model.max[22]
-model.totalPie212223 = Constraint(rule=totalPie212223_rule )
+# # #Constrain baker total max
+# def totalPie2829_rule(model):
+#     return sum(model.pie_box[i,j] for i in [29,30] for j in model.box_idx)<= model.max[30]
+# model.totalPie2829 = Constraint(rule=totalPie2829_rule )
 
-# #Constrain baker total max
-def totalPie2526_rule(model):
-    return sum(model.pie_box[i,j] for i in [25,26,27] for j in model.box_idx)<= model.max[26]
-model.totalPie2526 = Constraint(rule=totalPie2526_rule )
+# # #Constrain baker total max
+# def totalPie3031_rule(model):
+#     return sum(model.pie_box[i,j] for i in [31,32] for j in model.box_idx)<= model.max[32]
+# model.totalPie3031 = Constraint(rule=totalPie3031_rule )
 
-# #Constrain baker total max
-def totalPie2829_rule(model):
-    return sum(model.pie_box[i,j] for i in [29,30] for j in model.box_idx)<= model.max[30]
-model.totalPie2829 = Constraint(rule=totalPie2829_rule )
-
-# #Constrain baker total max
-def totalPie3031_rule(model):
-    return sum(model.pie_box[i,j] for i in [31,32] for j in model.box_idx)<= model.max[32]
-model.totalPie3031 = Constraint(rule=totalPie3031_rule )
-
-# #Constrain baker total max
-def totalPie3536_rule(model):
-    return sum(model.pie_box[i,j] for i in [35,36] for j in model.box_idx)<= model.max[35]
-model.totalPie3536 = Constraint(rule=totalPie3536_rule )
+# # #Constrain baker total max
+# def totalPie3536_rule(model):
+#     return sum(model.pie_box[i,j] for i in [35,36] for j in model.box_idx)<= model.max[35]
+# model.totalPie3536 = Constraint(rule=totalPie3536_rule )
 
 ## Baker specific minimums
 
 def bakermins_rule(model,b):
-    pies = bakers_pies[b]
+    pies = model.bakers_pies[b]
     return sum(model.pie_box[i,j] for i in pies for j in model.box_idx) >= model.baker_mins[b]    
 model.bakermins_rule=Constraint(model.bakers_idx, rule=bakermins_rule)
 
