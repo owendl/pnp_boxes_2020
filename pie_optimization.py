@@ -28,21 +28,40 @@ flags = pd.melt(df[["Key","Regular","Vegan","GlutenFree"]],  id_vars=["Key"], va
 
 flags_dict = flags.set_index(['Key','variable'])['value'].to_dict()
 
+swsa = pd.melt(df[["Key","Sweet", "Savory"]],  id_vars=["Key"], value_vars=["Sweet","Savory"])
+
+swsa_dict = swsa.set_index(['Key','variable'])['value'].to_dict()
+
 box_ranges_dict= pd.melt(box_ranges, id_vars="box", value_vars=["max","min"]).set_index(["box","variable"])["value"].to_dict()
 
 boxes = ["Regular","Vegan","GlutenFree"]
+
+sweet_savory = ["Sweet","Savory"]
+
+bakers_pies=df[["Key","Bakery"]].groupby('Bakery')['Key'].apply(list)
+
+bakers_pies=bakers_pies.to_dict()
+
+bakers=df["Bakery"].drop_duplicates().tolist()
+
+bakers_mins=df[["Priority","Bakery"]].groupby("Bakery").max().to_dict()["Priority"]
 
 
 data={None:
       {
        "pie_idx": {None: range(len(df))}
        ,"box_idx": {None: boxes}
+      ,"swsa_idx": {None: sweet_savory}
+      ,"bakers_idx":{None: bakers}
        ,"maxmin_idx":{None:["max","min"]}
        ,"cost":cost_dict
        ,"max":max_dict
        ,"flags":flags_dict
+       ,"swsa":swsa_dict
        , "box_range":box_ranges_dict
        ,"priority":priority_dict
+       ,"bakers_pies":bakers_pies
+        , "baker_mins": bakers_mins
        }
       }
 
@@ -55,7 +74,10 @@ model.box_idx = Set()
 
 model.maxmin_idx=Set()
 
-model.Pie151617_idx=Set(initialize=[15,16,17])
+model.swsa_idx=Set()
+
+model.bakers_idx=Set()
+
 
 
 
@@ -63,7 +85,10 @@ model.cost = Param(model.pie_idx, within=NonNegativeReals)
 model.priority = Param(model.pie_idx, within=NonNegativeReals)
 model.max = Param(model.pie_idx, within=PositiveIntegers)
 model.flags = Param(model.pie_idx, model.box_idx, within=Binary)
+model.swsa = Param(model.pie_idx, model.swsa_idx, within=Binary)
 model.box_range = Param(model.box_idx, model.maxmin_idx, within=NonNegativeIntegers)
+model.baker_mins=Param(model.bakers_idx, within=PositiveIntegers)
+model.bakers_pies=Param(model.bakers_idx, within=Any)
 
 
 
@@ -97,6 +122,10 @@ model.boxmin = Constraint(model.box_idx,rule=boxmin_rule )
 def pieboxCoverage_rule(model, j):
     return sum(model.pie_box[i,j] for i in model.pie_idx)>=4*model.box[j]
 model.pieboxCoverage = Constraint(model.box_idx, rule=pieboxCoverage_rule)
+
+def boxsavory_rule(model,j):
+    return sum(model.pie_box[i,j]*model.swsa[i, "Savory"] for i in model.pie_idx)>=model.box[j]
+model.boxsavory = Constraint(model.box_idx, rule=boxsavory_rule)
 
 ## Baker specific maximums
 
@@ -137,17 +166,17 @@ model.totalPie212223 = Constraint(rule=totalPie212223_rule )
 
 # #Constrain baker total max
 def totalPie2526_rule(model):
-    return sum(model.pie_box[i,j] for i in [25,26] for j in model.box_idx)<= model.max[26]
+    return sum(model.pie_box[i,j] for i in [25,26,27] for j in model.box_idx)<= model.max[26]
 model.totalPie2526 = Constraint(rule=totalPie2526_rule )
 
 # #Constrain baker total max
 def totalPie2829_rule(model):
-    return sum(model.pie_box[i,j] for i in [28,29] for j in model.box_idx)<= model.max[28]
+    return sum(model.pie_box[i,j] for i in [29,30] for j in model.box_idx)<= model.max[30]
 model.totalPie2829 = Constraint(rule=totalPie2829_rule )
 
 # #Constrain baker total max
 def totalPie3031_rule(model):
-    return sum(model.pie_box[i,j] for i in [30,31] for j in model.box_idx)<= model.max[30]
+    return sum(model.pie_box[i,j] for i in [31,32] for j in model.box_idx)<= model.max[32]
 model.totalPie3031 = Constraint(rule=totalPie3031_rule )
 
 # #Constrain baker total max
@@ -157,35 +186,11 @@ model.totalPie3536 = Constraint(rule=totalPie3536_rule )
 
 ## Baker specific minimums
 
-# #Constrain baker total min
-def totalPie2345priority_rule(model):
-    return sum(model.pie_box[i,j] for i in [2,3,4,5] for j in model.box_idx)>= model.priority[2]
-model.totalPie2345priority = Constraint(rule=totalPie2345priority_rule )
+def bakermins_rule(model,b):
+    pies = bakers_pies[b]
+    return sum(model.pie_box[i,j] for i in pies for j in model.box_idx) >= model.baker_mins[b]    
+model.bakermins_rule=Constraint(model.bakers_idx, rule=bakermins_rule)
 
-# #Constrain baker total min
-def totalPie789priority_rule(model):
-    return sum(model.pie_box[i,j] for i in [7,8,9] for j in model.box_idx)>= model.priority[7]
-model.totalPie789priority = Constraint(rule=totalPie789priority_rule )
-
-# #Constrain baker total min
-def totalPie111213priority_rule(model):
-    return sum(model.pie_box[i,j] for i in [11,12,13] for j in model.box_idx)>= model.priority[11]
-model.totalPie111213priority = Constraint(rule=totalPie111213priority_rule )
-
-# #Constrain baker total min
-def totalPie1920priority_rule(model):
-    return sum(model.pie_box[i,j] for i in [19,20] for j in model.box_idx)>= model.priority[19]
-model.totalPie1920priority = Constraint(rule=totalPie1920priority_rule )
-
-# #Constrain baker total min
-def totalPie24priority_rule(model):
-    return sum(model.pie_box[i,j] for i in [24] for j in model.box_idx)>= model.priority[24]
-model.totalPie24priority = Constraint(rule=totalPie24priority_rule )
-
-# #Constrain baker total min
-# def totalPie3435priority_rule(model):
-    # return sum(model.pie_box[i,j] for i in [34,35] for j in model.box_idx)>= model.priority[34]
-# model.totalPie3435priority = Constraint(rule=totalPie3435priority_rule )
 
 # Objective function: minimize cost of the pie * number of pies for each box
 def obj_rule(model):
