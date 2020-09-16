@@ -6,28 +6,27 @@ We reached out to local bakers and generated of available pies, quantity and cos
 
 ## Framing the problem: Math
 ### Objective
-The goal of the problem is to create a three kinds of boxes (gluten free, vegan, no conditions which we called regular) that contain 4 hand pies from our vendors for the minimum cost possible ($c_i$, the cost for us to purchase the pie $i$). We have labeled each pie from each baker as falling into one or more of those categories. Thus, a particular pie could be used in multiple types of boxes. To account for this for each pie, I created a variable $Q_{i,j}$, where $i$ is a particular pie from a particular baker and $j$ is the box category, denoting the number of the pies needed for the $j$ type box. This makes the objective function: 
-$$min\sum_{j \in J}\sum_{i \in I}c_iQ_{i,j}$$
+The goal of the problem is to create a three kinds of boxes (gluten free, vegan, no conditions which we called regular) that contain 4 hand pies from our vendors for the minimum cost possible (<img src="https://render.githubusercontent.com/render/math?math=c_i">, the cost for us to purchase the pie $i$). We have labeled each pie from each baker as falling into one or more of those categories. Thus, a particular pie could be used in multiple types of boxes. To account for this for each pie, I created a variable <img src="https://render.githubusercontent.com/render/math?math=Q_{i,j}">, where i is a particular pie from a particular baker and j is the box category, denoting the number of the pies needed for the j type box. This makes the objective function:<img src="https://render.githubusercontent.com/render/math?math=min\sum_{j \in J}\sum_{i \in I}c_iQ_{i,j}"> 
 
 ### Baker and pie capacity
 Put simply, we can't ask for more pies from a baker than they can supply. However, some bakers gave us their maximum capacity on a per pie basis (i) and some gave us total maximum capacity across all their pies (ii). Thus there are two different versions of this constraint. The first (i)
-$$\sum_{j \in J}Q_{i,j}<=max_i$$
-where $max_i$ is the maximum capacity for that pie.
-$$\sum_{i \in baker}\sum_{j \in J}Q_{i,j}<=max_{baker}$$
-where $i \in baker$ is the set of all pies for a particular baker.
+<img src="https://render.githubusercontent.com/render/math?math=\sum_{j \in J}Q_{i,j}<=max_i">
+where <img src="https://render.githubusercontent.com/render/math?math=max_i"> is the maximum capacity for that pie.
+<img src="https://render.githubusercontent.com/render/math?math=\sum_{i \in baker}\sum_{j \in J}Q_{i,j}<=max_{baker}">
+where <img src="https://render.githubusercontent.com/render/math?math=i \in baker"> is the set of all pies for a particular baker.
 
 ### Box type constraint and no repeated pies
 To provide variety for each box, we wanted no box to have more than one pie. This led to a contraint
-$$Q_{i,j}<=Q_jF_{i,j}$$
-where $Q_j$ is the total number of boxes of type $j$ and $F_{i,j}$ is 1 if pie $i$ is eligible for box $j$ and 0 if it is not. This constraint also controls that pies are not placed in boxes that they are not eligible for.
+<img src="https://render.githubusercontent.com/render/math?math=Q_{i,j}<=Q_jF_{i,j}">
+where <img src="https://render.githubusercontent.com/render/math?math=Q_j"> is the total number of boxes of type j and <img src="https://render.githubusercontent.com/render/math?math=F_{i,j}"> is 1 if pie i is eligible for box j and 0 if it is not. This constraint also controls that pies are not placed in boxes that they are not eligible for.
 
 ### Box ranges
 Even though we are seeking to minimize cost, which is correlated with the number of pies ordered, I set box range quantities for each type of box to provide more flexibility for the solver.
-$$min_j<=Q_j<=max_j$$
+<img src="https://render.githubusercontent.com/render/math?math=min_j<=Q_j<=max_j">
 
 ### Box coverage
 Each box must contain at least 4 pies of the appropriate type of pies. 
-$$\sum_{i \in I}Q_{i,j}>=4Q_j$$
+<img src="https://render.githubusercontent.com/render/math?math=\sum_{i \in I}Q_{i,j}>=4Q_j">
 
 ## Implementing the Solution: Coding
 
